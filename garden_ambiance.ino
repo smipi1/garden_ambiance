@@ -112,12 +112,13 @@ void trackSun(uint32_t color, uint8_t wait) {
 
   while(1) {
     for(uint32_t i=start; i<=end; i++) {
+      uint32_t pos = end - i;
       uint32_t fade = MULTIPLIER;
-      uint32_t edge_dist = min(distance(start, i), distance(end, i));
+      uint32_t edge_dist = min(distance(start, pos), distance(end, pos));
       if(edge_dist < fade_dist) {
         fade = MULTIPLIER * edge_dist / fade_dist;
       }
-      positionSun(i, scaleColor(color, fade), spread, wait);
+      positionSun(pos, scaleColor(color, fade), spread, wait);
       if(buttonPressed()) {
         return;
       }

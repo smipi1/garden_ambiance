@@ -31,6 +31,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXELS, DATA_PIN, NEO_GRB + NEO_KHZ8
 // and minimize distance between Arduino and first pixel.  Avoid connecting
 // on a live circuit...if you must, connect GND first.
 
+uint32_t scene[PIXELS];
+
 void setup() {
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
   #if defined (__AVR_ATtiny85__)
@@ -39,6 +41,14 @@ void setup() {
   // End of trinket special code
 
   pinMode(BUTTON_PIN, INPUT);
+
+  for(int i = 0; i < strip.numPixels(); i++) {
+    scene[i] = strip.Color(
+      255 * distance(strip.numPixels()/2, i) / (strip.numPixels() / 2),
+      255 * distance(0, i) / strip.numPixels(),
+      255 * distance(strip.numPixels(), i) / strip.numPixels()
+    );
+  }
 
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
@@ -66,6 +76,7 @@ void loop() {
     trackSun(strip.Color(255, 255, 32), wait);
     fadeOut(wait);
     fadeToColor(strip.Color(0, 0, 0), wait);
+    fadeToScene(scene, wait);
     fadeToColor(strip.Color(255, 255, 32), wait);
     fadeToColor(strip.Color(255, 0, 0), wait);
     fadeToColor(strip.Color(0, 255, 0), wait);
@@ -120,6 +131,32 @@ void trackSun(uint32_t color, uint8_t wait) {
   }
 }
 
+void fadeToScene(uint32_t colors[], uint8_t wait) {
+  uint32_t prevColors[strip.numPixels()];
+  for(uint32_t i=0; i<strip.numPixels(); i++) {
+    prevColors[i] = strip.getPixelColor(i);
+  }
+  for(uint32_t fade = 0; fade < MULTIPLIER; fade += MULTIPLIER/FADE_COUNT) {
+    for(uint32_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, scaleColor(colors[i], fade) + scaleColor(prevColors[i], MULTIPLIER - fade));
+    }
+    strip.show();
+    delay(wait);
+    if(buttonPressed()) {
+      return;
+    }
+  }
+  for(uint32_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, colors[i]);
+  }
+  while(1) {
+    if(buttonPressed()) {
+      return;
+    }
+    delay(wait);
+  }
+}
+
 void fadeToColor(uint32_t color, uint8_t wait) {
   uint32_t prevColor = strip.getPixelColor(0);
   for(uint32_t fade = 0; fade < MULTIPLIER; fade += MULTIPLIER/FADE_COUNT) {
@@ -128,8 +165,8 @@ void fadeToColor(uint32_t color, uint8_t wait) {
       return;
     }
   }
+  setColor(color, wait);
   while(1) {
-    setColor(color, wait);
     if(buttonPressed()) {
       return;
     }

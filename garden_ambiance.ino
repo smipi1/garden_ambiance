@@ -9,12 +9,12 @@
 #define STRIP_COUNT 3
 #define PIXELS (LEDS_PER_STRIP * STRIP_COUNT) 
 #define MULTIPLIER 65536
-#define PITCH 16
+#define PITCH 256
 #define SPREAD 7
 #define FADE_IN SPREAD
 #define QUIET 4
 #define DEBOUNCE 3
-#define FADE_COUNT 12
+#define FADE_COUNT 256
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -65,6 +65,7 @@ void loop() {
   while(1) {
     trackSun(strip.Color(255, 255, 32), wait);
     fadeOut(wait);
+    fadeToColor(strip.Color(0, 0, 0), wait);
     fadeToColor(strip.Color(255, 255, 32), wait);
     fadeToColor(strip.Color(255, 0, 0), wait);
     fadeToColor(strip.Color(0, 255, 0), wait);
@@ -77,15 +78,15 @@ void fadeOut(uint32_t wait)
 {
   while(1) {
     bool allZero = true;
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      uint32_t color = scaleColor(strip.getPixelColor(i),MULTIPLIER/2);
+    for(uint32_t i=0; i<strip.numPixels(); i++) {
+      uint32_t color = scaleColor(strip.getPixelColor(i),99*MULTIPLIER/100);
       if(color) {
         allZero = false;
       }
-      strip.setPixelColor(i, scaleColor(strip.getPixelColor(i),MULTIPLIER/2));
-      strip.show();
-      delay(wait);
+      strip.setPixelColor(i, color);
     }
+    strip.show();
+    delay(wait);
     if(allZero) {
       return;
     }
@@ -93,13 +94,13 @@ void fadeOut(uint32_t wait)
 }
 
 void trackSun(uint32_t color, uint8_t wait) {
-  uint16_t start = 0;
-  uint16_t end = (strip.numPixels() * PITCH) - 1;
-  uint16_t fade_dist = FADE_IN * PITCH;
-  uint32_t spread = SPREAD*PITCH;
+  uint32_t start = 0;
+  uint32_t end = (strip.numPixels() * PITCH) - 1;
+  uint32_t fade_dist = FADE_IN * PITCH;
+  uint32_t spread = SPREAD * PITCH;
 
   while(1) {
-    for(uint16_t i=start; i<=end; i++) {
+    for(uint32_t i=start; i<=end; i++) {
       uint32_t fade = MULTIPLIER;
       uint32_t edge_dist = min(distance(start, i), distance(end, i));
       if(edge_dist < fade_dist) {
@@ -110,7 +111,7 @@ void trackSun(uint32_t color, uint8_t wait) {
         return;
       }
     }
-    for(uint16_t i=start; i<=end/QUIET; i++) {
+    for(uint32_t i=start; i<=end/QUIET; i++) {
       positionSun(i, 0, spread, wait);
       if(buttonPressed()) {
         return;
@@ -160,19 +161,19 @@ uint32_t attenuate(uint32_t color, uint32_t distance, uint32_t spread) {
   }
 }
 
-void positionSun(uint32_t pos, uint32_t color, uint8_t spread, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
+void positionSun(uint32_t pos, uint32_t color, uint32_t spread, uint8_t wait) {
+  for(uint32_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, attenuate(color, distance(pos, i*PITCH), spread));
-    strip.show();
-    delay(wait);
   }
+  strip.show();
+  delay(wait);
 }
 
 void setColor(uint32_t color, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
+  for(uint32_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, color);
-    strip.show();
-    delay(wait);
   }
+  strip.show();
+  delay(wait);
 }
 

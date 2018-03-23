@@ -73,7 +73,17 @@ bool buttonPressed(void)
 void loop() {
   uint8_t wait = 1;
   while(1) {
-    trackSun(strip.Color(255, 255, 32), wait);
+    trackSun(strip.Color(255, 255, 32), PITCH, wait);
+    fadeOut(wait);
+    trackSun(strip.Color(255, 255, 32), PITCH / 2, wait);
+    fadeOut(wait);
+    trackSun(strip.Color(255, 255, 32), PITCH / 4, wait);
+    fadeOut(wait);
+    trackSun(strip.Color(255, 255, 32), PITCH / 8, wait);
+    fadeOut(wait);
+    trackSun(strip.Color(255, 255, 32), PITCH / 16, wait);
+    fadeOut(wait);
+    trackSun(strip.Color(255, 255, 32), PITCH / 32, wait);
     fadeOut(wait);
     fadeToColor(strip.Color(0, 0, 0), wait);
     fadeToScene(scene, wait);
@@ -104,11 +114,11 @@ void fadeOut(uint32_t wait)
   }
 }
 
-void trackSun(uint32_t color, uint8_t wait) {
+void trackSun(uint32_t color, uint32_t pitch, uint8_t wait) {
   uint32_t start = 0;
-  uint32_t end = (strip.numPixels() * PITCH) - 1;
-  uint32_t fade_dist = FADE_IN * PITCH;
-  uint32_t spread = SPREAD * PITCH;
+  uint32_t end = (strip.numPixels() * pitch) - 1;
+  uint32_t fade_dist = FADE_IN * pitch;
+  uint32_t spread = SPREAD * pitch;
 
   while(1) {
     for(uint32_t i=start; i<=end; i++) {
@@ -118,13 +128,13 @@ void trackSun(uint32_t color, uint8_t wait) {
       if(edge_dist < fade_dist) {
         fade = MULTIPLIER * edge_dist / fade_dist;
       }
-      positionSun(pos, scaleColor(color, fade), spread, wait);
+      positionSun(pos, scaleColor(color, fade), pitch, spread, wait);
       if(buttonPressed()) {
         return;
       }
     }
     for(uint32_t i=start; i<=end/QUIET; i++) {
-      positionSun(i, 0, spread, wait);
+      positionSun(i, 0, pitch, spread, wait);
       if(buttonPressed()) {
         return;
       }
@@ -199,9 +209,9 @@ uint32_t attenuate(uint32_t color, uint32_t distance, uint32_t spread) {
   }
 }
 
-void positionSun(uint32_t pos, uint32_t color, uint32_t spread, uint8_t wait) {
+void positionSun(uint32_t pos, uint32_t color, uint32_t pitch, uint32_t spread, uint8_t wait) {
   for(uint32_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, attenuate(color, distance(pos, i*PITCH), spread));
+    strip.setPixelColor(i, attenuate(color, distance(pos, i*pitch), spread));
   }
   strip.show();
   delay(wait);
